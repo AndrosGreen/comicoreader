@@ -1,0 +1,30 @@
+# CLAUDE.md
+
+Android comic reader app (Kotlin, Jetpack Compose). The full product and technical spec is in `docs/SPEC.md`. Read it before starting any task.
+
+## How we work
+
+- Work on **one milestone or one small task at a time**, as defined in `docs/SPEC.md`. Do not start the next milestone unless asked.
+- **Propose a short plan before writing code** for any change touching more than a couple of files, and wait for approval.
+- Keep changes small and focused. No unrelated refactors or "while I'm here" changes.
+- **Do not add new dependencies** without asking first. Use the version catalog (`gradle/libs.versions.toml`) for any approved dependency.
+- Follow the package structure and data model in the spec. If something in the spec seems wrong or blocks the task, say so instead of silently deviating.
+- When a decision changes, propose an update to `docs/SPEC.md` (including the decision log) as part of the change.
+- Never commit or modify signing keys, keystores, or `local.properties`.
+- No network access in the app. No analytics.
+
+## Code conventions
+
+- Kotlin, Compose, Material 3. MVVM: one `ViewModel` per screen exposing `StateFlow<UiState>`.
+- `domain/` must not import Android framework classes.
+- Use coroutines and Flow; do I/O on `Dispatchers.IO`.
+- Write unit tests for non-UI logic (archive reading, repositories, DAOs).
+
+## Commands
+
+- Build: `./gradlew assembleDebug`
+- Unit tests: `./gradlew test`
+- Instrumented tests (device/emulator needed): `./gradlew connectedAndroidTest`
+- Lint: `./gradlew lint`
+
+After making changes, run the build and unit tests and report the results.
