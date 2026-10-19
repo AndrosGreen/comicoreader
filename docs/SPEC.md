@@ -151,3 +151,7 @@ Record significant decisions here (date — decision — reason).
 - minSdk 31 — native AVIF/WebP decoding, modern storage model only, dynamic color.
 - Copy files on import (not reference) — simpler and more reliable for MVP; linking folders is a later feature.
 - CBZ only for MVP — trivial to support with standard library; CBR has library/licensing complexity.
+- 2026-10-19 — Package / applicationId is `com.androsgreen.comicreader` — the template's `com.example.*` cannot be published to Google Play, and `applicationId` is not changeable after release.
+- 2026-10-19 — No `org.jetbrains.kotlin.android` plugin — AGP 9 has built-in Kotlin support and actively rejects the standalone plugin. Kotlin is still pinned to 2.4.21 through the `kotlin-compose` plugin alias in the version catalog.
+- 2026-10-19 — Views libraries (`appcompat`, `com.google.android.material`) dropped — the app is Compose-only; the XML theme is a bare `android:Theme.Material.Light.NoActionBar` and all theming lives in `ui/theme`.
+- 2026-10-19 — Toolchain pinned at M0: AGP 9.4.1, Gradle 9.6.0, Kotlin 2.4.21, KSP 2.3.12, Compose BOM 2026.09.00, compileSdk/targetSdk 37, Java 11 target.

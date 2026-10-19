@@ -1,4 +1,4 @@
-package com.example.comicoreader
+package com.androsgreen.comicreader
 
 import org.junit.Test
 
