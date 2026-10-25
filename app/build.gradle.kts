@@ -37,6 +37,14 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        // Exported Room schemas, readable by MigrationTestHelper in instrumented tests.
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 kotlin {
