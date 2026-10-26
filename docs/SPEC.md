@@ -36,7 +36,7 @@ Single `app` module for now, organized by layer:
 
 ```
 com.androsgreen.comicreader
-├── domain/        # Models (Comic, Collection), repository and importer interfaces, result types, use cases. No Android imports.
+├── domain/        # Models (Comic, Collection, CollectionSummary), repository and importer interfaces, result types, use cases. No Android imports.
 ├── data/
 │   ├── db/        # Room entities, DAOs, database
 │   ├── files/     # Importer, app-private file storage, cover generation
@@ -46,7 +46,7 @@ com.androsgreen.comicreader
 │   ├── library/   # Library grid screen
 │   ├── collections/ # Collection list & detail screens
 │   ├── reader/    # Reader screen
-│   ├── components/ # Shared composables
+│   ├── components/ # Shared composables (ComicGrid)
 │   └── theme/
 └── di/            # Koin modules
 ```
@@ -115,9 +115,10 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 - Delete a comic: long-press a cover, then confirm.
 
 ### M3 — Collections
-- Collections screen: list, create, rename, delete (with confirmation).
-- Collection detail screen: grid of its comics.
-- Add a comic to one or more collections from the library. Since M2 uses long-press for delete, long-press becomes a small action menu (Add to collections, Delete). Remove a comic from a collection.
+- Bottom navigation with two tabs, Library and Collections; each tab keeps its own back stack.
+- Collections screen: rows with the first comic's cover, name and comic count; create and rename through a name dialog (trimmed; blank and duplicate names rejected inline); rename/delete from a row's overflow menu; delete with confirmation (comics are kept).
+- Collection detail screen: grid of its comics in the order they were added; long-press → confirm to remove a comic from the collection (it stays in the library); closes itself if the collection is deleted.
+- Add a comic to collections from the library: long-press opens an action sheet (Add to collections, Delete); the checklist dialog pre-checks current memberships and saves only the changes. With no collections, it points to the Collections tab.
 
 ### M4 — Reader
 - Open a comic from library or collection.
@@ -146,7 +147,8 @@ Roughly in priority order, not committed:
 - Backup / export of library data
 - Detect duplicate imports (importing the same file twice currently creates two entries)
 - Startup cleanup of unreferenced files (a process death mid-copy can leave one behind)
-- Compact delete-dialog title for very long comic titles
+- Compact dialog titles for very long comic titles (delete and remove-from-collection confirmations)
+- Create a collection from inside the "Add to collections" dialog (deferred in M3 in favour of pointing to the Collections tab)
 - iOS / iPadOS via Kotlin Multiplatform
 
 ## Decision log
