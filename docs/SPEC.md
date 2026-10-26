@@ -133,6 +133,22 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 - Covers in the library and in collections show progress: nothing when unread, a thin bar while reading, a full bar and a ✓ badge when finished.
 - `lastOpenedAt` is updated on open and on every page change.
 
+## Status and next steps
+
+**MVP complete (2026-10-26):** milestones M0–M5 are done. Comics can be imported, browsed as a cover grid with reading progress, organised into collections, and read full screen with zoom, tap zones and saved progress, all offline.
+
+Possible next milestones, grouping items from the backlog below (pick one or two at a time):
+
+- **Reading modes:** right-to-left paging (manga), vertical continuous scroll (webtoons), double-page spreads on tablets / landscape. They extend the reader built in M4 and are the most visible improvement for different kinds of comics.
+- **Reader polish:** a page slider in the overlay, and sharper deep zoom via sub-sampling.
+- **Library:** search and sort options, `ComicInfo.xml` metadata (series, issue number), detecting duplicate imports.
+- **Collections polish:** create a collection from the "Add to collections" dialog, reorder comics within a collection.
+- **More formats:** CBR / CB7, PDF (`PdfRenderer`). CBR needs a library and licence check first.
+- **Housekeeping:** startup cleanup of unreferenced files, compact dialog titles for very long comic titles, backup / export of library data.
+- **Longer term:** linking external folders instead of copying, iOS / iPadOS via Kotlin Multiplatform.
+
+To start one: add it as a new milestone (M6, …) in this spec, split it into GitHub issues, and work through them as in M1–M5.
+
 ## Out of scope for MVP (backlog)
 
 Roughly in priority order, not committed:
