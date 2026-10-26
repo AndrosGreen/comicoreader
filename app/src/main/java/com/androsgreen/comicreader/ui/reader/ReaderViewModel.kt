@@ -7,6 +7,7 @@ import com.androsgreen.comicreader.domain.ComicRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -43,6 +44,16 @@ class ReaderViewModel(
             title = comic.title,
             pages = archive.pageNames.indices.map { ComicPage(archive, comic.fileName, it) }
         )
+    }
+
+    fun onPageChanged(index: Int) {
+        _uiState.update { state ->
+            if (index in state.pages.indices) state.copy(currentPage = index) else state
+        }
+    }
+
+    fun onToggleOverlay() {
+        _uiState.update { it.copy(isOverlayVisible = !it.isOverlayVisible) }
     }
 
     private fun fail(error: ReaderError) {
