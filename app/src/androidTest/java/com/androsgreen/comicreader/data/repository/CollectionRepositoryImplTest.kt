@@ -83,6 +83,14 @@ class CollectionRepositoryImplTest : DatabaseTest() {
     }
 
     @Test
+    fun observeCollection_mapsIt_andIsNullForAnUnknownId() = runTest {
+        val id = createdId("Marvel")
+
+        assertEquals(Collection(id, "Marvel", NOW), repository.observeCollection(id).first())
+        assertEquals(null, repository.observeCollection(id + 1).first())
+    }
+
+    @Test
     fun deleteCollection_removesIt() = runTest {
         val id = createdId("Marvel")
 

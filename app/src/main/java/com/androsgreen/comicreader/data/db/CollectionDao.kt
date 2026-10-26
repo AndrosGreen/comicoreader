@@ -28,6 +28,10 @@ interface CollectionDao {
     @Query("DELETE FROM collections WHERE id = :id")
     suspend fun deleteById(id: Long): Int
 
+    /** Emits null once the collection no longer exists. */
+    @Query("SELECT * FROM collections WHERE id = :id")
+    fun observeById(id: Long): Flow<CollectionEntity?>
+
     /** Sorted by name ignoring case for display; uniqueness itself is case-sensitive. */
     @Query("SELECT * FROM collections ORDER BY name COLLATE NOCASE, name")
     fun observeAll(): Flow<List<CollectionEntity>>

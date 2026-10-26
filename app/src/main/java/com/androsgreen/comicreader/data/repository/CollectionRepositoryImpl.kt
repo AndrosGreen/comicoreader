@@ -19,6 +19,9 @@ class CollectionRepositoryImpl(
     override fun observeCollections(): Flow<List<Collection>> =
         collectionDao.observeAll().map { collections -> collections.map { it.toDomain() } }
 
+    override fun observeCollection(id: Long): Flow<Collection?> =
+        collectionDao.observeById(id).map { it?.toDomain() }
+
     override fun observeCollectionSummaries(): Flow<List<CollectionSummary>> =
         collectionDao.observeSummaries().map { summaries -> summaries.map { it.toDomain() } }
 

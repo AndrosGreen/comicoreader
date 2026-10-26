@@ -2,19 +2,11 @@ package com.androsgreen.comicreader.ui.library
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,25 +27,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.androsgreen.comicreader.R
 import com.androsgreen.comicreader.domain.Comic
 import com.androsgreen.comicreader.domain.ComicFormat
 import com.androsgreen.comicreader.domain.ImportFailure
 import com.androsgreen.comicreader.domain.ImportResult
+import com.androsgreen.comicreader.ui.components.ComicGrid
 import com.androsgreen.comicreader.ui.theme.ComicReaderTheme
 import org.koin.compose.viewmodel.koinViewModel
-import java.io.File
 
 /**
  * MIME types offered in the file picker. Apps report CBZ files inconsistently (Android's own
@@ -125,7 +113,11 @@ fun LibraryContent(
                     importEnabled = !state.isImporting,
                     onImportClick = onImportClick
                 )
-                else -> ComicGrid(state.comics, onLongPress = onDeleteRequest)
+                else -> ComicGrid(
+                    comics = state.comics,
+                    onLongPress = onDeleteRequest,
+                    longPressLabel = stringResource(R.string.action_delete)
+                )
             }
         }
     }
@@ -183,56 +175,6 @@ private fun EmptyLibrary(importEnabled: Boolean, onImportClick: () -> Unit) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = null)
             Text(stringResource(R.string.action_import_comics), modifier = Modifier.padding(start = 8.dp))
         }
-    }
-}
-
-@Composable
-private fun ComicGrid(comics: List<Comic>, onLongPress: (Comic) -> Unit) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 100.dp),
-        // Extra bottom padding keeps the last row clear of the floating button.
-        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 96.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(comics, key = { it.id }) { comic -> ComicCard(comic, onLongPress = { onLongPress(comic) }) }
-    }
-}
-
-@Composable
-private fun ComicCard(comic: Comic, onLongPress: () -> Unit) {
-    Column(
-        Modifier.combinedClickable(
-            // Opening the reader comes in M4.
-            onClick = {},
-            onLongClick = onLongPress,
-            onLongClickLabel = stringResource(R.string.action_delete)
-        )
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(2f / 3f)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            comic.coverPath?.let { path ->
-                AsyncImage(
-                    model = File(path),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-        Text(
-            text = comic.title,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 4.dp)
-        )
     }
 }
 

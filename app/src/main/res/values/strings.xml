@@ -4,8 +4,12 @@
     <string name="library_title">Library</string>
     <string name="collections_title">Collections</string>
     <string name="action_back">Back</string>
-    <!-- Placeholder until the Collection detail screen lands (M3.3). -->
-    <string name="collection_detail_placeholder">Collection %1$d</string>
+    <string name="collection_empty_title">This collection is empty</string>
+    <string name="collection_empty_hint">In the Library, long-press a comic and choose Add to collections.</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_remove_from_collection">Remove from collection</string>
+    <string name="remove_comic_title">Remove “%1$s” from “%2$s”?</string>
+    <string name="remove_comic_message">The comic stays in your library.</string>
 
     <string name="collections_empty_title">No collections yet</string>
     <string name="collections_empty_hint">Group comics into collections, like a series or a reading list.</string>

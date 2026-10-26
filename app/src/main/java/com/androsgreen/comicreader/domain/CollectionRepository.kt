@@ -7,6 +7,9 @@ interface CollectionRepository {
     /** All collections, sorted by name ignoring case. */
     fun observeCollections(): Flow<List<Collection>>
 
+    /** The collection with [id]; emits null once it no longer exists. */
+    fun observeCollection(id: Long): Flow<Collection?>
+
     /** Like [observeCollections], with each collection's comic count and first comic's cover. */
     fun observeCollectionSummaries(): Flow<List<CollectionSummary>>
 
