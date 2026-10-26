@@ -36,7 +36,7 @@ Single `app` module for now, organized by layer:
 
 ```
 com.androsgreen.comicreader
-├── domain/        # Models (Comic, Collection, CollectionSummary), repository and importer interfaces, result types, use cases. No Android imports.
+├── domain/        # Models (Comic, Collection, CollectionSummary, ReadingProgress), repository and importer interfaces, result types, use cases. No Android imports.
 ├── data/
 │   ├── db/        # Room entities, DAOs, database
 │   ├── files/     # Importer, app-private file storage, cover generation, stored-comic opener
@@ -129,9 +129,9 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 - A missing or unreadable comic shows an error with a way back.
 
 ### M5 — Reading progress
-- Current page is saved while reading and restored when reopening.
-- Library shows a simple progress indicator per comic.
-- `lastOpenedAt` updated on open.
+- Current page is saved on open and on every page change, and restored (clamped to the page range) when reopening — also after the app is killed.
+- Covers in the library and in collections show progress: nothing when unread, a thin bar while reading, a full bar and a ✓ badge when finished.
+- `lastOpenedAt` is updated on open and on every page change.
 
 ## Out of scope for MVP (backlog)
 
