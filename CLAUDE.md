@@ -12,6 +12,7 @@ Android comic reader app (Kotlin, Jetpack Compose). The full product and technic
 - When a decision changes, propose an update to `docs/SPEC.md` (including the decision log) as part of the change.
 - Never commit or modify signing keys, keystores, or `local.properties`.
 - No network access in the app. No analytics.
+- Pull request descriptions must not include Claude session links (`https://claude.ai/code/session_...`).
 
 ## Code conventions
 
