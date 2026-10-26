@@ -40,3 +40,5 @@ fun comicEntity(
     addedAt = addedAt,
     lastOpenedAt = lastOpenedAt
 )
+
+fun collectionEntity(name: String, createdAt: Long = 0L) = CollectionEntity(name = name, createdAt = createdAt)
