@@ -26,6 +26,7 @@ A local, offline comic reader for Android, focused on reading comics and organiz
 | Zoom & pan in reader | Telephoto (`zoomable-image-coil3`) |
 | Async | Kotlin Coroutines + Flow |
 | Archive reading | `java.util.zip.ZipFile` (CBZ) |
+| Testing | JUnit 4, `kotlinx-coroutines-test`; JVM tests for pure logic, instrumented tests (in-memory Room) for DAOs and repositories |
 
 New dependencies must not be added without discussion. Prefer permissively licensed libraries (Apache 2.0, MIT, BSD).
 
@@ -34,8 +35,8 @@ New dependencies must not be added without discussion. Prefer permissively licen
 Single `app` module for now, organized by layer:
 
 ```
-com.<name>.comicreader
-├── domain/        # Models (Comic, Collection), repository interfaces, use cases. No Android imports.
+com.androsgreen.comicreader
+├── domain/        # Models (Comic, Collection), repository interfaces, result types, use cases. No Android imports.
 ├── data/
 │   ├── db/        # Room entities, DAOs, database
 │   ├── files/     # Import, storage paths, thumbnail generation
@@ -67,12 +68,12 @@ Pattern: MVVM. Each screen has a `ViewModel` exposing a `StateFlow<UiState>`; co
 
 **Collection**
 - `id` (Long, auto)
-- `name` (String, unique)
+- `name` (String, unique, case-sensitive: "Batman" and "batman" may coexist)
 - `createdAt` (Long)
 
 **CollectionComic** (join table, many-to-many)
 - `collectionId`, `comicId` (composite primary key, foreign keys with cascade delete)
-- `position` (Int, order within the collection)
+- `position` (Int, 0-based order within the collection; a comic is appended at max + 1, and removals may leave gaps)
 
 Deleting a comic removes it from all collections. Deleting a collection does **not** delete its comics.
 
@@ -103,7 +104,8 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 ### M1 — Data layer
 - Room entities, DAOs, and database for Comic, Collection, CollectionComic.
 - Repository interfaces in `domain`, implementations in `data`.
-- Unit tests for DAOs (in-memory database).
+- Instrumented tests for DAOs and repositories (in-memory database); JVM tests for mappers.
+- Data layer wired into Koin.
 
 ### M2 — Import & library
 - `CbzReader` implementing `ComicArchiveReader` (list pages, open page stream), with unit tests including natural sort and ignored entries.
@@ -163,3 +165,4 @@ Record significant decisions here (date — decision — reason).
 - 2026-10-26 — Repository interfaces live in `domain/` and speak only domain models. Creating or renaming a collection returns `CollectionNameResult` (`Success(collectionId)` / `NameTaken`) instead of throwing: a taken name is an expected user outcome, and a sealed result makes callers handle it. The data layer catches Room's constraint exception and maps it, so no storage types reach `domain`. Name trimming/blank validation is left to the UI layer.
 - 2026-10-26 — Repositories add no explicit `Dispatchers.IO` around Room calls — Room's `suspend`/`Flow` APIs already run queries on its own background executor, so `withContext` would only add a thread hop. Non-Room I/O (file copy, cover generation in M2) still uses `Dispatchers.IO` explicitly.
 - 2026-10-26 — Mapper tests run on the JVM (`test/`); repository tests are instrumented against an in-memory DB, because the key behaviour (Room's constraint exception → `CollectionNameResult.NameTaken`) needs real SQLite and fake DAOs would mostly test the fakes. `CollectionRepositoryImpl` takes an injectable `clock` for `createdAt`.
+- 2026-10-26 — Koin wiring is verified by an instrumented test that resolves each repository from the graph the app's `Application` starts (Koin `single`s are lazy, so a successful launch proves nothing) — no `koin-test` dependency needed. The database file is `comic_reader.db`.
