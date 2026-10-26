@@ -4,10 +4,26 @@
     <string name="library_title">Library</string>
     <string name="collections_title">Collections</string>
     <string name="action_back">Back</string>
-    <!-- Placeholders until the Collections screens land (M3.2, M3.3). -->
-    <string name="collections_placeholder">Collections are coming soon.</string>
-    <string name="collections_placeholder_open_sample">Open sample collection</string>
+    <!-- Placeholder until the Collection detail screen lands (M3.3). -->
     <string name="collection_detail_placeholder">Collection %1$d</string>
+
+    <string name="collections_empty_title">No collections yet</string>
+    <string name="collections_empty_hint">Group comics into collections, like a series or a reading list.</string>
+    <plurals name="collection_comic_count">
+        <item quantity="one">%d comic</item>
+        <item quantity="other">%d comics</item>
+    </plurals>
+    <string name="action_new_collection">New collection</string>
+    <string name="action_create">Create</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_more_options">More options</string>
+    <string name="collection_create_title">New collection</string>
+    <string name="collection_rename_title">Rename collection</string>
+    <string name="collection_name_label">Name</string>
+    <string name="collection_name_error_blank">Enter a name</string>
+    <string name="collection_name_error_taken">A collection named “%1$s” already exists</string>
+    <string name="delete_collection_title">Delete “%1$s”?</string>
+    <string name="delete_collection_message">The comics in it stay in your library.</string>
     <string name="library_empty_title">Your library is empty</string>
     <string name="library_empty_hint">Import CBZ files to start reading.</string>
     <string name="action_import">Import</string>

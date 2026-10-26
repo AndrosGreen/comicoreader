@@ -5,6 +5,7 @@ import com.androsgreen.comicreader.data.db.DatabaseTest
 import com.androsgreen.comicreader.data.db.comicEntity
 import com.androsgreen.comicreader.domain.Collection
 import com.androsgreen.comicreader.domain.CollectionNameResult
+import com.androsgreen.comicreader.domain.CollectionSummary
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -68,6 +69,17 @@ class CollectionRepositoryImplTest : DatabaseTest() {
         repository.removeComicFromCollection(marvel, comic)
 
         assertEquals(emptyList<Long>(), repository.observeComicsInCollection(marvel).first().map { it.id })
+    }
+
+    @Test
+    fun observeCollectionSummaries_mapsCountAndCover() = runTest {
+        val marvel = createdId("Marvel")
+        val comic = db.comicDao().insert(comicEntity(title = "Saga").copy(coverPath = "/covers/saga.webp"))
+        repository.addComicToCollection(marvel, comic)
+
+        val summary = repository.observeCollectionSummaries().first().single()
+
+        assertEquals(CollectionSummary(Collection(marvel, "Marvel", NOW), 1, "/covers/saga.webp"), summary)
     }
 
     @Test

@@ -32,6 +32,22 @@ interface CollectionDao {
     @Query("SELECT * FROM collections ORDER BY name COLLATE NOCASE, name")
     fun observeAll(): Flow<List<CollectionEntity>>
 
+    /** Like [observeAll], plus each collection's comic count and the cover of its first comic. */
+    @Query(
+        """
+        SELECT collections.*,
+            (SELECT COUNT(*) FROM collection_comics
+                WHERE collection_comics.collectionId = collections.id) AS comicCount,
+            (SELECT comics.coverPath FROM collection_comics
+                INNER JOIN comics ON comics.id = collection_comics.comicId
+                WHERE collection_comics.collectionId = collections.id
+                ORDER BY collection_comics.position LIMIT 1) AS coverPath
+        FROM collections
+        ORDER BY collections.name COLLATE NOCASE, collections.name
+        """
+    )
+    fun observeSummaries(): Flow<List<CollectionSummaryRow>>
+
     /**
      * Appends a comic at the end of a collection (position = max + 1, starting at 0).
      * Returns false if the comic was already in the collection; its position is left unchanged.

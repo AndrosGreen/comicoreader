@@ -1,8 +1,10 @@
 package com.androsgreen.comicreader.data.repository
 
 import com.androsgreen.comicreader.data.db.CollectionEntity
+import com.androsgreen.comicreader.data.db.CollectionSummaryRow
 import com.androsgreen.comicreader.data.db.ComicEntity
 import com.androsgreen.comicreader.domain.Collection
+import com.androsgreen.comicreader.domain.CollectionSummary
 import com.androsgreen.comicreader.domain.Comic
 
 fun ComicEntity.toDomain() = Comic(
@@ -39,4 +41,10 @@ fun Collection.toEntity() = CollectionEntity(
     id = id,
     name = name,
     createdAt = createdAt
+)
+
+fun CollectionSummaryRow.toDomain() = CollectionSummary(
+    collection = collection.toDomain(),
+    comicCount = comicCount,
+    coverPath = coverPath
 )
