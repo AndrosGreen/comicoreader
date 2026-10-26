@@ -2,6 +2,7 @@ package com.androsgreen.comicreader.ui.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.androsgreen.comicreader.domain.Comic
 import com.androsgreen.comicreader.domain.ComicImporter
 import com.androsgreen.comicreader.domain.ComicRepository
 import com.androsgreen.comicreader.domain.ImportResult
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LibraryViewModel(
-    comicRepository: ComicRepository,
+    private val comicRepository: ComicRepository,
     private val importer: ComicImporter
 ) : ViewModel() {
 
@@ -24,14 +25,16 @@ class LibraryViewModel(
     )
 
     private val importState = MutableStateFlow(ImportState())
+    private val pendingDelete = MutableStateFlow<Comic?>(null)
 
     val uiState: StateFlow<LibraryUiState> =
-        combine(comicRepository.observeComics(), importState) { comics, import ->
+        combine(comicRepository.observeComics(), importState, pendingDelete) { comics, import, toDelete ->
             LibraryUiState(
                 comics = comics,
                 isLoading = false,
                 importProgress = import.progress,
-                failedImports = import.failed
+                failedImports = import.failed,
+                pendingDelete = toDelete
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState())
 
@@ -55,5 +58,20 @@ class LibraryViewModel(
 
     fun onFailuresShown() {
         importState.update { it.copy(failed = emptyList()) }
+    }
+
+    /** Asks for confirmation before deleting [comic]. */
+    fun onDeleteRequest(comic: Comic) {
+        pendingDelete.value = comic
+    }
+
+    fun onDeleteDismiss() {
+        pendingDelete.value = null
+    }
+
+    fun onDeleteConfirm() {
+        val comic = pendingDelete.value ?: return
+        pendingDelete.value = null
+        viewModelScope.launch { comicRepository.deleteComic(comic.id) }
     }
 }

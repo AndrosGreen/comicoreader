@@ -11,7 +11,9 @@ data class LibraryUiState(
     /** Non-null while an import is running. */
     val importProgress: ImportProgress? = null,
     /** Failures from finished imports, kept until the screen reports them shown. */
-    val failedImports: List<ImportResult.Failed> = emptyList()
+    val failedImports: List<ImportResult.Failed> = emptyList(),
+    /** The comic awaiting delete confirmation, if any. */
+    val pendingDelete: Comic? = null
 ) {
     val isImporting: Boolean get() = importProgress != null
 }

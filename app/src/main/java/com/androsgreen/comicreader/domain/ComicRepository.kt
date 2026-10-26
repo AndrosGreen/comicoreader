@@ -14,6 +14,9 @@ interface ComicRepository {
 
     suspend fun updateProgress(id: Long, lastReadPage: Int, lastOpenedAt: Long)
 
-    /** Also removes the comic from every collection. */
+    /**
+     * Removes the comic from the library and every collection, and deletes the app's stored copy
+     * and cover. The original document it was imported from is never touched.
+     */
     suspend fun deleteComic(id: Long)
 }
