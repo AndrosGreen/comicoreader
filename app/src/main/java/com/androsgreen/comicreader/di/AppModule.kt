@@ -12,11 +12,13 @@ import com.androsgreen.comicreader.data.repository.ComicRepositoryImpl
 import com.androsgreen.comicreader.domain.CollectionRepository
 import com.androsgreen.comicreader.domain.ComicImporter
 import com.androsgreen.comicreader.domain.ComicRepository
+import com.androsgreen.comicreader.ui.library.LibraryViewModel
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 /**
- * Application-wide Koin definitions. View models are added from M2 onwards.
+ * Application-wide Koin definitions.
  */
 val appModule = module {
     single {
@@ -32,4 +34,6 @@ val appModule = module {
     single<ComicArchiveReader> { CbzReader() }
     single { CoverGenerator() }
     single<ComicImporter> { ComicImporterImpl(get(), get(), get(), get()) }
+
+    viewModel { LibraryViewModel(get(), get()) }
 }

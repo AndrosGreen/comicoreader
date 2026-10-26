@@ -11,5 +11,6 @@ enum class ImportFailure {
     CANNOT_READ_FILE,
     NOT_A_CBZ,
     NO_PAGES,
-    FIRST_PAGE_UNREADABLE
+    FIRST_PAGE_UNREADABLE,
+    UNEXPECTED
 }

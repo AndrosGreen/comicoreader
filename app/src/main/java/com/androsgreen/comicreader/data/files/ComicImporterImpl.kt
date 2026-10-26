@@ -65,9 +65,11 @@ class ComicImporterImpl(
             return ImportResult.Imported(id, comic.title)
         } catch (e: InvalidArchiveException) {
             return fail(name, fileName, ImportFailure.NOT_A_CBZ)
-        } catch (e: Throwable) {
+        } catch (e: CancellationException) {
             cleanUp(fileName)
             throw e
+        } catch (e: Exception) {
+            return fail(name, fileName, ImportFailure.UNEXPECTED)
         }
     }
 

@@ -1,4 +1,21 @@
 <resources>
     <string name="app_name">Comic Reader</string>
-    <string name="library_placeholder">Library</string>
+
+    <string name="library_title">Library</string>
+    <string name="library_empty_title">Your library is empty</string>
+    <string name="library_empty_hint">Import CBZ files to start reading.</string>
+    <string name="action_import">Import</string>
+    <string name="action_import_comics">Import comics</string>
+    <string name="import_progress">Importing %1$d of %2$d</string>
+
+    <string name="import_failed_single">Couldn\'t import %1$s: %2$s</string>
+    <plurals name="import_failed_many">
+        <item quantity="one">Couldn\'t import %d file</item>
+        <item quantity="other">Couldn\'t import %d files</item>
+    </plurals>
+    <string name="import_failure_cannot_read">the file couldn\'t be read</string>
+    <string name="import_failure_not_cbz">it isn\'t a CBZ file</string>
+    <string name="import_failure_no_pages">it has no pages</string>
+    <string name="import_failure_first_page_unreadable">its first page couldn\'t be read</string>
+    <string name="import_failure_unexpected">something went wrong</string>
 </resources>
