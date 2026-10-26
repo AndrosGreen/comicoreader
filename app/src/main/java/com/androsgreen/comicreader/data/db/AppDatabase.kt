@@ -14,4 +14,5 @@ import androidx.room.RoomDatabase
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun comicDao(): ComicDao
+    abstract fun collectionDao(): CollectionDao
 }
