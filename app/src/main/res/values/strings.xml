@@ -2,6 +2,12 @@
     <string name="app_name">Comic Reader</string>
 
     <string name="library_title">Library</string>
+    <string name="collections_title">Collections</string>
+    <string name="action_back">Back</string>
+    <!-- Placeholders until the Collections screens land (M3.2, M3.3). -->
+    <string name="collections_placeholder">Collections are coming soon.</string>
+    <string name="collections_placeholder_open_sample">Open sample collection</string>
+    <string name="collection_detail_placeholder">Collection %1$d</string>
     <string name="library_empty_title">Your library is empty</string>
     <string name="library_empty_hint">Import CBZ files to start reading.</string>
     <string name="action_import">Import</string>
