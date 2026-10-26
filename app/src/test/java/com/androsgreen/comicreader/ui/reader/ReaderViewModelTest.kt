@@ -94,6 +94,41 @@ class ReaderViewModelTest {
         assertTrue(archive.closed)
     }
 
+    @Test
+    fun startsOnTheFirstPage_withTheOverlayHidden() {
+        repository.comics[7] = saga
+
+        val state = viewModel(opener = { archive }).uiState.value
+
+        assertEquals(0, state.currentPage)
+        assertFalse(state.isOverlayVisible)
+    }
+
+    @Test
+    fun pageChanges_areTracked_andOutOfRangeIndicesIgnored() {
+        repository.comics[7] = saga
+        val viewModel = viewModel(opener = { archive })
+
+        viewModel.onPageChanged(2)
+        assertEquals(2, viewModel.uiState.value.currentPage)
+
+        viewModel.onPageChanged(3)
+        viewModel.onPageChanged(-1)
+        assertEquals(2, viewModel.uiState.value.currentPage)
+    }
+
+    @Test
+    fun toggleOverlay_showsThenHidesIt() {
+        repository.comics[7] = saga
+        val viewModel = viewModel(opener = { archive })
+
+        viewModel.onToggleOverlay()
+        assertTrue(viewModel.uiState.value.isOverlayVisible)
+
+        viewModel.onToggleOverlay()
+        assertFalse(viewModel.uiState.value.isOverlayVisible)
+    }
+
     private fun viewModel(opener: ComicOpener) =
         ReaderViewModel(comicId = 7, comicRepository = repository, comicOpener = opener)
 
