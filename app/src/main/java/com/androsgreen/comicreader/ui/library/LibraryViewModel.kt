@@ -2,6 +2,7 @@ package com.androsgreen.comicreader.ui.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.androsgreen.comicreader.domain.CollectionRepository
 import com.androsgreen.comicreader.domain.Comic
 import com.androsgreen.comicreader.domain.ComicImporter
 import com.androsgreen.comicreader.domain.ComicRepository
@@ -10,12 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LibraryViewModel(
     private val comicRepository: ComicRepository,
+    private val collectionRepository: CollectionRepository,
     private val importer: ComicImporter
 ) : ViewModel() {
 
@@ -24,17 +27,25 @@ class LibraryViewModel(
         val failed: List<ImportResult.Failed> = emptyList()
     )
 
+    private data class Dialogs(
+        val actionsFor: Comic? = null,
+        val pendingDelete: Comic? = null,
+        val collectionPicker: CollectionPickerState? = null
+    )
+
     private val importState = MutableStateFlow(ImportState())
-    private val pendingDelete = MutableStateFlow<Comic?>(null)
+    private val dialogs = MutableStateFlow(Dialogs())
 
     val uiState: StateFlow<LibraryUiState> =
-        combine(comicRepository.observeComics(), importState, pendingDelete) { comics, import, toDelete ->
+        combine(comicRepository.observeComics(), importState, dialogs) { comics, import, dialogs ->
             LibraryUiState(
                 comics = comics,
                 isLoading = false,
                 importProgress = import.progress,
                 failedImports = import.failed,
-                pendingDelete = toDelete
+                pendingDelete = dialogs.pendingDelete,
+                actionsFor = dialogs.actionsFor,
+                collectionPicker = dialogs.collectionPicker
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState())
 
@@ -60,18 +71,65 @@ class LibraryViewModel(
         importState.update { it.copy(failed = emptyList()) }
     }
 
-    /** Asks for confirmation before deleting [comic]. */
+    /** Opens the action sheet (Add to collections, Delete) for [comic]. */
+    fun onComicLongPress(comic: Comic) {
+        dialogs.update { it.copy(actionsFor = comic) }
+    }
+
+    fun onActionsDismiss() {
+        dialogs.update { it.copy(actionsFor = null) }
+    }
+
+    /** Closes the action sheet and asks for confirmation before deleting [comic]. */
     fun onDeleteRequest(comic: Comic) {
-        pendingDelete.value = comic
+        dialogs.update { it.copy(actionsFor = null, pendingDelete = comic) }
     }
 
     fun onDeleteDismiss() {
-        pendingDelete.value = null
+        dialogs.update { it.copy(pendingDelete = null) }
     }
 
     fun onDeleteConfirm() {
-        val comic = pendingDelete.value ?: return
-        pendingDelete.value = null
+        val comic = dialogs.value.pendingDelete ?: return
+        dialogs.update { it.copy(pendingDelete = null) }
         viewModelScope.launch { comicRepository.deleteComic(comic.id) }
+    }
+
+    /** Closes the action sheet and opens the collection picker with [comic]'s current memberships checked. */
+    fun onAddToCollectionsClick(comic: Comic) {
+        dialogs.update { it.copy(actionsFor = null) }
+        viewModelScope.launch {
+            val collections = collectionRepository.observeCollections().first()
+            val memberships = collectionRepository.observeCollectionsForComic(comic.id).first().map { it.id }.toSet()
+            dialogs.update {
+                it.copy(collectionPicker = CollectionPickerState(comic, collections, memberships, memberships))
+            }
+        }
+    }
+
+    fun onCollectionToggle(collectionId: Long) {
+        dialogs.update { dialogs ->
+            val picker = dialogs.collectionPicker ?: return@update dialogs
+            val selected = if (collectionId in picker.selectedIds) {
+                picker.selectedIds - collectionId
+            } else {
+                picker.selectedIds + collectionId
+            }
+            dialogs.copy(collectionPicker = picker.copy(selectedIds = selected))
+        }
+    }
+
+    fun onCollectionPickerDismiss() {
+        dialogs.update { it.copy(collectionPicker = null) }
+    }
+
+    /** Adds the comic to newly checked collections and removes it from unchecked ones; nothing else changes. */
+    fun onCollectionPickerSave() {
+        val picker = dialogs.value.collectionPicker ?: return
+        dialogs.update { it.copy(collectionPicker = null) }
+        viewModelScope.launch {
+            (picker.selectedIds - picker.initialIds).forEach { collectionRepository.addComicToCollection(it, picker.comic.id) }
+            (picker.initialIds - picker.selectedIds).forEach { collectionRepository.removeComicFromCollection(it, picker.comic.id) }
+        }
     }
 }

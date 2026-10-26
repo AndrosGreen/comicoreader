@@ -37,7 +37,7 @@ val appModule = module {
     single { CoverGenerator() }
     single<ComicImporter> { ComicImporterImpl(get(), get(), get(), get()) }
 
-    viewModel { LibraryViewModel(get(), get()) }
+    viewModel { LibraryViewModel(comicRepository = get(), collectionRepository = get(), importer = get()) }
     viewModel { CollectionsViewModel(get()) }
     viewModel { params -> CollectionDetailViewModel(collectionId = params.get(), repository = get()) }
 }

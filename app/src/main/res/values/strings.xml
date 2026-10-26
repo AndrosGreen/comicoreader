@@ -33,6 +33,11 @@
     <string name="action_import">Import</string>
     <string name="action_import_comics">Import comics</string>
     <string name="action_delete">Delete</string>
+    <string name="action_more_actions">More actions</string>
+    <string name="action_add_to_collections">Add to collections</string>
+    <string name="action_save">Save</string>
+    <string name="action_go_to_collections">Go to Collections</string>
+    <string name="collection_picker_empty">No collections yet. Create one in the Collections tab, then come back to add this comic.</string>
     <string name="action_cancel">Cancel</string>
     <string name="delete_comic_title">Delete “%1$s”?</string>
     <string name="delete_comic_message">The comic and its reading progress will be removed from this device, including from any collections. The original file isn\'t affected.</string>
