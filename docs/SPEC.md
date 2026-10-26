@@ -39,13 +39,13 @@ com.androsgreen.comicreader
 ├── domain/        # Models (Comic, Collection, CollectionSummary), repository and importer interfaces, result types, use cases. No Android imports.
 ├── data/
 │   ├── db/        # Room entities, DAOs, database
-│   ├── files/     # Importer, app-private file storage, cover generation
-│   ├── archive/   # Comic archive readers (CbzReader behind a ComicArchiveReader interface)
+│   ├── files/     # Importer, app-private file storage, cover generation, stored-comic opener
+│   ├── archive/   # Comic archive readers (CbzReader behind a ComicArchiveReader interface), ComicOpener
 │   └── repository/ # Repository implementations
 ├── ui/            # ComicReaderApp (nav host + bottom bar), Routes
 │   ├── library/   # Library grid screen
 │   ├── collections/ # Collection list & detail screens
-│   ├── reader/    # Reader screen
+│   ├── reader/    # Reader screen, Coil page fetcher
 │   ├── components/ # Shared composables (ComicGrid)
 │   └── theme/
 └── di/            # Koin modules
@@ -91,7 +91,7 @@ Deleting a comic removes it from all collections. Deleting a collection does **n
 - Ignore directories, hidden files and folders (any path segment starting with `.`), anything under a `__MACOSX` folder, and non-image files (e.g. `ComicInfo.xml` is ignored for now). Both `/` and `\` are accepted as path separators.
 - Page order: **natural sort** of full entry paths — digit runs compare by value (`page2` before `page10`), letters ignore case, and paths sort folder by folder (`ch2/` before `ch10/`).
 - A corrupt or unreadable file is an error; an archive with no images opens with zero pages and is rejected by the importer.
-- Pages are decoded on demand and downsampled to screen size. Never load all pages into memory.
+- Pages are decoded on demand and downsampled to screen size. Never load all pages into memory. In the reader, one archive stays open per session and Coil streams each page from it.
 
 ## MVP milestones
 
@@ -121,10 +121,12 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 - Add a comic to collections from the library: long-press opens an action sheet (Add to collections, Delete); the checklist dialog pre-checks current memberships and saves only the changes. With no collections, it points to the Collections tab.
 
 ### M4 — Reader
-- Open a comic from library or collection.
-- Horizontal paging (left-to-right), one page at a time.
-- Pinch to zoom, double-tap to zoom, pan when zoomed.
-- Tap center to toggle a minimal overlay (title, page X of Y, back button); immersive full-screen otherwise.
+- Open a comic by tapping its cover in the library or a collection; the reader is full screen, outside the bottom-bar tabs.
+- Horizontal paging (left-to-right), one page at a time, neighbouring pages preloaded.
+- Pinch to zoom, double-tap to zoom, pan when zoomed (Telephoto).
+- When not zoomed, tapping the left/right third turns the page; the centre toggles a minimal overlay (back button, title, page X of Y). When zoomed, any tap toggles the overlay.
+- Immersive full screen otherwise; the system bars return with the overlay and when leaving the reader.
+- A missing or unreadable comic shows an error with a way back.
 
 ### M5 — Reading progress
 - Current page is saved while reading and restored when reopening.
