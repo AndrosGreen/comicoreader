@@ -17,14 +17,14 @@ Android comic reader app (Kotlin, Jetpack Compose). The full product and technic
 
 - Kotlin, Compose, Material 3. MVVM: one `ViewModel` per screen exposing `StateFlow<UiState>`.
 - `domain/` must not import Android framework classes.
-- Use coroutines and Flow; do I/O on `Dispatchers.IO`.
-- Write unit tests for non-UI logic (archive reading, repositories, DAOs).
+- Use coroutines and Flow; do I/O on `Dispatchers.IO` (Room's `suspend`/`Flow` calls already run off the main thread and need no extra dispatcher).
+- Write tests for non-UI logic: JVM unit tests (`test/`) for pure logic such as archive reading and mappers; instrumented tests (`androidTest/`, in-memory Room) for DAOs and repositories.
 
 ## Commands
 
 - Build: `./gradlew assembleDebug`
 - Unit tests: `./gradlew test`
-- Instrumented tests (device/emulator needed): `./gradlew connectedAndroidTest`
+- Instrumented tests (device/emulator needed): `./gradlew connectedAndroidTest` (prints nothing per test on success; for a summary run `./gradlew installDebug installDebugAndroidTest` then `adb shell am instrument -w com.androsgreen.comicreader.test/androidx.test.runner.AndroidJUnitRunner`)
 - Lint: `./gradlew lint`
 
-After making changes, run the build and unit tests and report the results.
+After making changes, run the build and unit tests and report the results. When `data/` or `di/` code changes, also run the instrumented tests if an emulator is available, and say so if it isn't.
