@@ -129,8 +129,58 @@ class ReaderViewModelTest {
         assertFalse(viewModel.uiState.value.isOverlayVisible)
     }
 
+    @Test
+    fun opensAtTheSavedPage_andRecordsTheOpenTime() {
+        repository.comics[7] = saga.copy(lastReadPage = 2)
+
+        val state = viewModel(opener = { archive }).uiState.value
+
+        assertEquals(2, state.currentPage)
+        assertEquals(listOf(Progress(7, page = 2, at = NOW)), repository.progress)
+    }
+
+    @Test
+    fun aSavedPageBeyondTheEnd_isClampedToTheLastPage() {
+        repository.comics[7] = saga.copy(lastReadPage = 10)
+
+        assertEquals(2, viewModel(opener = { archive }).uiState.value.currentPage)
+    }
+
+    @Test
+    fun pageChanges_areSaved_onceEach() {
+        repository.comics[7] = saga
+        val viewModel = viewModel(opener = { archive })
+
+        viewModel.onPageChanged(1)
+        viewModel.onPageChanged(1)
+        viewModel.onPageChanged(2)
+
+        assertEquals(listOf(0, 1, 2), repository.progress.map { it.page })
+    }
+
+    @Test
+    fun outOfRangePages_areNotSaved() {
+        repository.comics[7] = saga
+        val viewModel = viewModel(opener = { archive })
+
+        viewModel.onPageChanged(5)
+
+        assertEquals(listOf(0), repository.progress.map { it.page })
+    }
+
+    @Test
+    fun nothingIsSaved_whenTheComicCannotBeOpened() {
+        repository.comics[7] = saga
+
+        viewModel(opener = { throw InvalidArchiveException("corrupt") })
+
+        assertEquals(emptyList<Progress>(), repository.progress)
+    }
+
     private fun viewModel(opener: ComicOpener) =
-        ReaderViewModel(comicId = 7, comicRepository = repository, comicOpener = opener)
+        ReaderViewModel(comicId = 7, comicRepository = repository, comicOpener = opener, clock = { NOW })
+
+    private data class Progress(val comicId: Long, val page: Int, val at: Long)
 
     private class FakeArchive(override val pageNames: List<String>) : ComicArchive {
         var closed = false
@@ -142,14 +192,22 @@ class ReaderViewModelTest {
         }
     }
 
+    private companion object {
+        const val NOW = 1_234L
+    }
+
     private class FakeComicRepository : ComicRepository {
         val comics = mutableMapOf<Long, Comic>()
+        val progress = mutableListOf<Progress>()
 
         override suspend fun getComic(id: Long): Comic? = comics[id]
 
+        override suspend fun updateProgress(id: Long, lastReadPage: Int, lastOpenedAt: Long) {
+            progress += Progress(id, lastReadPage, lastOpenedAt)
+        }
+
         override fun observeComics(): Flow<List<Comic>> = error("not used")
         override suspend fun addComic(comic: Comic): Long = error("not used")
-        override suspend fun updateProgress(id: Long, lastReadPage: Int, lastOpenedAt: Long) = error("not used")
         override suspend fun deleteComic(id: Long) = error("not used")
     }
 }
