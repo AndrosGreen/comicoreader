@@ -2,18 +2,27 @@ package com.androsgreen.comicreader.ui.library
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -27,10 +36,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,7 +69,10 @@ private val CBZ_MIME_TYPES = arrayOf(
 )
 
 @Composable
-fun LibraryScreen(viewModel: LibraryViewModel = koinViewModel()) {
+fun LibraryScreen(
+    onOpenCollections: () -> Unit,
+    viewModel: LibraryViewModel = koinViewModel()
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         viewModel.import(uris.map { it.toString() })
@@ -67,9 +81,19 @@ fun LibraryScreen(viewModel: LibraryViewModel = koinViewModel()) {
         state = state,
         onImportClick = { picker.launch(CBZ_MIME_TYPES) },
         onFailuresShown = viewModel::onFailuresShown,
+        onComicLongPress = viewModel::onComicLongPress,
+        onActionsDismiss = viewModel::onActionsDismiss,
+        onAddToCollectionsClick = viewModel::onAddToCollectionsClick,
         onDeleteRequest = viewModel::onDeleteRequest,
         onDeleteConfirm = viewModel::onDeleteConfirm,
-        onDeleteDismiss = viewModel::onDeleteDismiss
+        onDeleteDismiss = viewModel::onDeleteDismiss,
+        onCollectionToggle = viewModel::onCollectionToggle,
+        onCollectionPickerSave = viewModel::onCollectionPickerSave,
+        onCollectionPickerDismiss = viewModel::onCollectionPickerDismiss,
+        onOpenCollections = {
+            viewModel.onCollectionPickerDismiss()
+            onOpenCollections()
+        }
     )
 }
 
@@ -79,9 +103,16 @@ fun LibraryContent(
     state: LibraryUiState,
     onImportClick: () -> Unit,
     onFailuresShown: () -> Unit,
+    onComicLongPress: (Comic) -> Unit,
+    onActionsDismiss: () -> Unit,
+    onAddToCollectionsClick: (Comic) -> Unit,
     onDeleteRequest: (Comic) -> Unit,
     onDeleteConfirm: () -> Unit,
-    onDeleteDismiss: () -> Unit
+    onDeleteDismiss: () -> Unit,
+    onCollectionToggle: (Long) -> Unit,
+    onCollectionPickerSave: () -> Unit,
+    onCollectionPickerDismiss: () -> Unit,
+    onOpenCollections: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val failureMessage = failureMessage(state.failedImports)
@@ -115,16 +146,112 @@ fun LibraryContent(
                 )
                 else -> ComicGrid(
                     comics = state.comics,
-                    onLongPress = onDeleteRequest,
-                    longPressLabel = stringResource(R.string.action_delete)
+                    onLongPress = onComicLongPress,
+                    longPressLabel = stringResource(R.string.action_more_actions)
                 )
             }
         }
     }
 
+    state.actionsFor?.let { comic ->
+        ComicActionsSheet(
+            comic = comic,
+            onAddToCollectionsClick = { onAddToCollectionsClick(comic) },
+            onDeleteClick = { onDeleteRequest(comic) },
+            onDismiss = onActionsDismiss
+        )
+    }
     state.pendingDelete?.let { comic ->
         DeleteComicDialog(comic, onConfirm = onDeleteConfirm, onDismiss = onDeleteDismiss)
     }
+    state.collectionPicker?.let { picker ->
+        CollectionPickerDialog(
+            picker = picker,
+            onToggle = onCollectionToggle,
+            onSave = onCollectionPickerSave,
+            onDismiss = onCollectionPickerDismiss,
+            onOpenCollections = onOpenCollections
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ComicActionsSheet(
+    comic: Comic,
+    onAddToCollectionsClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Rows take the sheet's own colour rather than ListItem's default surface.
+    val rowColors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Text(
+            text = comic.title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.action_add_to_collections)) },
+            leadingContent = { Icon(painterResource(R.drawable.ic_collections), contentDescription = null) },
+            colors = rowColors,
+            modifier = Modifier.clickable(onClick = onAddToCollectionsClick)
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.action_delete)) },
+            leadingContent = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null) },
+            colors = rowColors,
+            modifier = Modifier.clickable(onClick = onDeleteClick).padding(bottom = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun CollectionPickerDialog(
+    picker: CollectionPickerState,
+    onToggle: (Long) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit,
+    onOpenCollections: () -> Unit
+) {
+    val hasCollections = picker.collections.isNotEmpty()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.action_add_to_collections)) },
+        text = {
+            if (hasCollections) {
+                LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                    items(picker.collections, key = { it.id }) { collection ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().clickable { onToggle(collection.id) }
+                        ) {
+                            // The row handles the click, so the whole line is a touch target.
+                            Checkbox(checked = collection.id in picker.selectedIds, onCheckedChange = null)
+                            Text(
+                                text = collection.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(stringResource(R.string.collection_picker_empty))
+            }
+        },
+        confirmButton = {
+            if (hasCollections) {
+                TextButton(onClick = onSave) { Text(stringResource(R.string.action_save)) }
+            } else {
+                TextButton(onClick = onOpenCollections) { Text(stringResource(R.string.action_go_to_collections)) }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
+    )
 }
 
 @Composable
@@ -203,9 +330,16 @@ private fun EmptyLibraryPreview() {
             LibraryUiState(isLoading = false),
             onImportClick = {},
             onFailuresShown = {},
+            onComicLongPress = {},
+            onActionsDismiss = {},
+            onAddToCollectionsClick = {},
             onDeleteRequest = {},
             onDeleteConfirm = {},
-            onDeleteDismiss = {}
+            onDeleteDismiss = {},
+            onCollectionToggle = {},
+            onCollectionPickerSave = {},
+            onCollectionPickerDismiss = {},
+            onOpenCollections = {}
         )
     }
 }
@@ -221,9 +355,16 @@ private fun LibraryWithComicsPreview() {
             LibraryUiState(comics = comics, isLoading = false, importProgress = ImportProgress(2, 5)),
             onImportClick = {},
             onFailuresShown = {},
+            onComicLongPress = {},
+            onActionsDismiss = {},
+            onAddToCollectionsClick = {},
             onDeleteRequest = {},
             onDeleteConfirm = {},
-            onDeleteDismiss = {}
+            onDeleteDismiss = {},
+            onCollectionToggle = {},
+            onCollectionPickerSave = {},
+            onCollectionPickerDismiss = {},
+            onOpenCollections = {}
         )
     }
 }

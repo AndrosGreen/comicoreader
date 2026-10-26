@@ -70,7 +70,9 @@ fun ComicReaderApp() {
             modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
         ) {
             navigation<LibraryGraph>(startDestination = LibraryRoute) {
-                composable<LibraryRoute> { LibraryScreen() }
+                composable<LibraryRoute> {
+                    LibraryScreen(onOpenCollections = { navController.navigateToTab(TopLevelDestination.COLLECTIONS) })
+                }
             }
             navigation<CollectionsGraph>(startDestination = CollectionsRoute) {
                 composable<CollectionsRoute> {
