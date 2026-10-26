@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -192,6 +193,52 @@ class CollectionDaoTest : DatabaseTest() {
         val comic = comicDao.insert(comicEntity())
 
         assertEquals(emptyList<CollectionEntity>(), dao.observeCollectionsForComic(comic).first())
+    }
+
+    // Summaries
+
+    @Test
+    fun observeSummaries_countsComics_andTakesTheCoverOfTheFirstComicByPosition() = runTest {
+        val marvel = dao.insert(collectionEntity("Marvel"))
+        dao.insert(collectionEntity("Empty"))
+        val first = comicDao.insert(comicEntity(title = "First").copy(coverPath = "/covers/first.webp"))
+        val second = comicDao.insert(comicEntity(title = "Second").copy(coverPath = "/covers/second.webp"))
+        // Added second-then-first, so the cover must follow position, not id or insertion of the comic.
+        dao.addComicAtEnd(marvel, second)
+        dao.addComicAtEnd(marvel, first)
+
+        val summaries = dao.observeSummaries().first().associateBy { it.collection.name }
+
+        assertEquals(2, summaries.getValue("Marvel").comicCount)
+        assertEquals("/covers/second.webp", summaries.getValue("Marvel").coverPath)
+        assertEquals(0, summaries.getValue("Empty").comicCount)
+        assertNull(summaries.getValue("Empty").coverPath)
+    }
+
+    @Test
+    fun observeSummaries_followsMembershipChanges() = runTest {
+        val marvel = dao.insert(collectionEntity("Marvel"))
+        val first = comicDao.insert(comicEntity(title = "First").copy(coverPath = "/covers/first.webp"))
+        val second = comicDao.insert(comicEntity(title = "Second").copy(coverPath = "/covers/second.webp"))
+        dao.addComicAtEnd(marvel, first)
+        dao.addComicAtEnd(marvel, second)
+
+        dao.removeComic(marvel, first)
+        val afterRemove = dao.observeSummaries().first().single()
+        comicDao.deleteById(second)
+        val afterDelete = dao.observeSummaries().first().single()
+
+        assertEquals(1 to "/covers/second.webp", afterRemove.comicCount to afterRemove.coverPath)
+        assertEquals(0 to null, afterDelete.comicCount to afterDelete.coverPath)
+    }
+
+    @Test
+    fun observeSummaries_sortsByNameIgnoringCase() = runTest {
+        dao.insert(collectionEntity("Zatanna"))
+        dao.insert(collectionEntity("batman"))
+        dao.insert(collectionEntity("Avengers"))
+
+        assertEquals(listOf("Avengers", "batman", "Zatanna"), dao.observeSummaries().first().map { it.collection.name })
     }
 
     private suspend fun comicIdsIn(collectionId: Long): List<Long> =

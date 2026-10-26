@@ -7,6 +7,9 @@ interface CollectionRepository {
     /** All collections, sorted by name ignoring case. */
     fun observeCollections(): Flow<List<Collection>>
 
+    /** Like [observeCollections], with each collection's comic count and first comic's cover. */
+    fun observeCollectionSummaries(): Flow<List<CollectionSummary>>
+
     /** The collection's comics in the order they were added. */
     fun observeComicsInCollection(collectionId: Long): Flow<List<Comic>>
 

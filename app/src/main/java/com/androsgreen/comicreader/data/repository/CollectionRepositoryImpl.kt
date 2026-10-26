@@ -5,6 +5,7 @@ import com.androsgreen.comicreader.data.db.CollectionDao
 import com.androsgreen.comicreader.domain.Collection
 import com.androsgreen.comicreader.domain.CollectionNameResult
 import com.androsgreen.comicreader.domain.CollectionRepository
+import com.androsgreen.comicreader.domain.CollectionSummary
 import com.androsgreen.comicreader.domain.Comic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,6 +18,9 @@ class CollectionRepositoryImpl(
 
     override fun observeCollections(): Flow<List<Collection>> =
         collectionDao.observeAll().map { collections -> collections.map { it.toDomain() } }
+
+    override fun observeCollectionSummaries(): Flow<List<CollectionSummary>> =
+        collectionDao.observeSummaries().map { summaries -> summaries.map { it.toDomain() } }
 
     override fun observeComicsInCollection(collectionId: Long): Flow<List<Comic>> =
         collectionDao.observeComicsInCollection(collectionId).map { comics -> comics.map { it.toDomain() } }
