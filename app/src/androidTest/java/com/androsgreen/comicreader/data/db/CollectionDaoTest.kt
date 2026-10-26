@@ -195,6 +195,15 @@ class CollectionDaoTest : DatabaseTest() {
         assertEquals(emptyList<CollectionEntity>(), dao.observeCollectionsForComic(comic).first())
     }
 
+    @Test
+    fun observeById_emitsTheCollection_thenNullOnceDeleted() = runTest {
+        val id = dao.insert(collectionEntity("Marvel"))
+
+        assertEquals("Marvel", dao.observeById(id).first()?.name)
+        dao.deleteById(id)
+        assertNull(dao.observeById(id).first())
+    }
+
     // Summaries
 
     @Test

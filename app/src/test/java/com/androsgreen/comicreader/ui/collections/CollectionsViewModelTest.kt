@@ -192,6 +192,7 @@ class CollectionsViewModelTest {
         }
 
         override fun observeCollections(): Flow<List<Collection>> = error("not used")
+        override fun observeCollection(id: Long): Flow<Collection?> = error("not used")
         override fun observeComicsInCollection(collectionId: Long): Flow<List<Comic>> = error("not used")
         override fun observeCollectionsForComic(comicId: Long): Flow<List<Collection>> = error("not used")
         override suspend fun addComicToCollection(collectionId: Long, comicId: Long) = error("not used")

@@ -12,6 +12,7 @@ import com.androsgreen.comicreader.data.repository.ComicRepositoryImpl
 import com.androsgreen.comicreader.domain.CollectionRepository
 import com.androsgreen.comicreader.domain.ComicImporter
 import com.androsgreen.comicreader.domain.ComicRepository
+import com.androsgreen.comicreader.ui.collections.CollectionDetailViewModel
 import com.androsgreen.comicreader.ui.collections.CollectionsViewModel
 import com.androsgreen.comicreader.ui.library.LibraryViewModel
 import org.koin.android.ext.koin.androidContext
@@ -38,4 +39,5 @@ val appModule = module {
 
     viewModel { LibraryViewModel(get(), get()) }
     viewModel { CollectionsViewModel(get()) }
+    viewModel { params -> CollectionDetailViewModel(collectionId = params.get(), repository = get()) }
 }
