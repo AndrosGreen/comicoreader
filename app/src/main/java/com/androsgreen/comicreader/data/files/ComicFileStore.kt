@@ -14,7 +14,8 @@ import java.util.UUID
 
 /**
  * App-private storage for imported comics and their covers:
- * `<rootDir>/comics/<uuid>.cbz` and `<rootDir>/covers/<comicId>.webp`.
+ * `<rootDir>/comics/<uuid>.cbz` and `<rootDir>/covers/<uuid>.webp`. A cover shares its comic's
+ * file name, so it can be created before the comic has a database id.
  */
 class ComicFileStore(
     private val contentResolver: ContentResolver,
@@ -72,13 +73,13 @@ class ComicFileStore(
 
     fun comicFile(fileName: String): File = File(comicsDir, fileName)
 
-    fun coverFile(comicId: Long): File = File(coversDir, "$comicId.webp")
+    fun coverFile(fileName: String): File = File(coversDir, fileName.substringBeforeLast('.') + ".webp")
 
     /** Deletes a comic's stored file and cover. Files that are already gone are ignored. */
-    suspend fun deleteComicFiles(fileName: String, comicId: Long) {
+    suspend fun deleteComicFiles(fileName: String) {
         withContext(Dispatchers.IO) {
             comicFile(fileName).delete()
-            coverFile(comicId).delete()
+            coverFile(fileName).delete()
         }
     }
 }
