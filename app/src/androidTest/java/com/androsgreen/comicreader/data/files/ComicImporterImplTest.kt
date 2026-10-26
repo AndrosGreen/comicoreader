@@ -12,6 +12,7 @@ import com.androsgreen.comicreader.data.db.DatabaseTest
 import com.androsgreen.comicreader.data.repository.ComicRepositoryImpl
 import com.androsgreen.comicreader.domain.Comic
 import com.androsgreen.comicreader.domain.ComicFormat
+import com.androsgreen.comicreader.domain.ComicRepository
 import com.androsgreen.comicreader.domain.ImportFailure
 import com.androsgreen.comicreader.domain.ImportResult
 import kotlinx.coroutines.flow.first
@@ -104,6 +105,19 @@ class ComicImporterImplTest : DatabaseTest() {
         val result = importer.import(uriOf(File(sources, "missing.cbz")))
 
         assertEquals(ImportResult.Failed("missing.cbz", ImportFailure.CANNOT_READ_FILE), result)
+        assertNothingLeft()
+    }
+
+    @Test
+    fun unexpectedErrorWhileSaving_failsAsUnexpected_andLeavesNothing() = runTest {
+        val failingRepository = object : ComicRepository by repository {
+            override suspend fun addComic(comic: Comic): Long = throw IllegalStateException("disk I/O error")
+        }
+        val importer = ComicImporterImpl(store, CbzReader(), CoverGenerator(), failingRepository, clock = { NOW })
+
+        val result = importer.import(cbz("Saga.cbz", "p1.jpg" to jpeg()))
+
+        assertEquals(ImportResult.Failed("Saga.cbz", ImportFailure.UNEXPECTED), result)
         assertNothingLeft()
     }
 
