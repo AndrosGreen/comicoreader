@@ -2,6 +2,7 @@ package com.androsgreen.comicreader.ui
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -29,6 +30,7 @@ import com.androsgreen.comicreader.R
 import com.androsgreen.comicreader.ui.collections.CollectionDetailScreen
 import com.androsgreen.comicreader.ui.collections.CollectionsScreen
 import com.androsgreen.comicreader.ui.library.LibraryScreen
+import com.androsgreen.comicreader.ui.reader.ReaderScreen
 import kotlin.reflect.KClass
 
 private enum class TopLevelDestination(
@@ -47,6 +49,9 @@ fun ComicReaderApp() {
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
 
     Scaffold(
+        // Only the bottom bar's space is reserved here: each screen handles the status bar in its
+        // own Scaffold, and the reader draws edge to edge.
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             // Destinations outside the tab graphs (the reader, from M4) are full screen.
             val currentTab = TopLevelDestination.entries.firstOrNull { currentDestination.isIn(it) }
@@ -71,7 +76,10 @@ fun ComicReaderApp() {
         ) {
             navigation<LibraryGraph>(startDestination = LibraryRoute) {
                 composable<LibraryRoute> {
-                    LibraryScreen(onOpenCollections = { navController.navigateToTab(TopLevelDestination.COLLECTIONS) })
+                    LibraryScreen(
+                        onComicClick = { comic -> navController.navigate(ReaderRoute(comic.id)) },
+                        onOpenCollections = { navController.navigateToTab(TopLevelDestination.COLLECTIONS) }
+                    )
                 }
             }
             navigation<CollectionsGraph>(startDestination = CollectionsRoute) {
@@ -81,9 +89,16 @@ fun ComicReaderApp() {
                 composable<CollectionDetailRoute> { entry ->
                     CollectionDetailScreen(
                         collectionId = entry.toRoute<CollectionDetailRoute>().collectionId,
+                        onComicClick = { comic -> navController.navigate(ReaderRoute(comic.id)) },
                         onBack = navController::navigateUp
                     )
                 }
+            }
+            composable<ReaderRoute> { entry ->
+                ReaderScreen(
+                    comicId = entry.toRoute<ReaderRoute>().comicId,
+                    onBack = navController::navigateUp
+                )
             }
         }
     }

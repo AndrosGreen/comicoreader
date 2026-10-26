@@ -18,3 +18,7 @@ object CollectionsRoute
 
 @Serializable
 data class CollectionDetailRoute(val collectionId: Long)
+
+/** Outside the tab graphs, so the reader is full screen with no bottom bar. */
+@Serializable
+data class ReaderRoute(val comicId: Long)

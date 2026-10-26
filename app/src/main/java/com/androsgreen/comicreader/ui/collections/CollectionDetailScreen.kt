@@ -37,6 +37,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun CollectionDetailScreen(
     collectionId: Long,
+    onComicClick: (Comic) -> Unit,
     onBack: () -> Unit,
     viewModel: CollectionDetailViewModel = koinViewModel { parametersOf(collectionId) }
 ) {
@@ -48,6 +49,7 @@ fun CollectionDetailScreen(
     CollectionDetailContent(
         state = state,
         onBack = onBack,
+        onComicClick = onComicClick,
         onRemoveRequest = viewModel::onRemoveRequest,
         onRemoveConfirm = viewModel::onRemoveConfirm,
         onRemoveDismiss = viewModel::onRemoveDismiss
@@ -59,6 +61,7 @@ fun CollectionDetailScreen(
 fun CollectionDetailContent(
     state: CollectionDetailUiState,
     onBack: () -> Unit,
+    onComicClick: (Comic) -> Unit,
     onRemoveRequest: (Comic) -> Unit,
     onRemoveConfirm: () -> Unit,
     onRemoveDismiss: () -> Unit
@@ -81,6 +84,7 @@ fun CollectionDetailContent(
                 state.comics.isEmpty() -> EmptyCollection()
                 else -> ComicGrid(
                     comics = state.comics,
+                    onClick = onComicClick,
                     onLongPress = onRemoveRequest,
                     longPressLabel = stringResource(R.string.action_remove_from_collection)
                 )
@@ -123,7 +127,7 @@ private fun CollectionDetailPreview() {
     ComicReaderTheme {
         CollectionDetailContent(
             state = CollectionDetailUiState(name = "Marvel", comics = comics, isLoading = false),
-            onBack = {}, onRemoveRequest = {}, onRemoveConfirm = {}, onRemoveDismiss = {}
+            onBack = {}, onComicClick = {}, onRemoveRequest = {}, onRemoveConfirm = {}, onRemoveDismiss = {}
         )
     }
 }
@@ -134,7 +138,7 @@ private fun EmptyCollectionDetailPreview() {
     ComicReaderTheme {
         CollectionDetailContent(
             state = CollectionDetailUiState(name = "Marvel", isLoading = false),
-            onBack = {}, onRemoveRequest = {}, onRemoveConfirm = {}, onRemoveDismiss = {}
+            onBack = {}, onComicClick = {}, onRemoveRequest = {}, onRemoveConfirm = {}, onRemoveDismiss = {}
         )
     }
 }

@@ -32,6 +32,7 @@ import java.io.File
 @Composable
 fun ComicGrid(
     comics: List<Comic>,
+    onClick: (Comic) -> Unit,
     onLongPress: (Comic) -> Unit,
     longPressLabel: String,
     modifier: Modifier = Modifier
@@ -45,17 +46,21 @@ fun ComicGrid(
         modifier = modifier.fillMaxSize()
     ) {
         items(comics, key = { it.id }) { comic ->
-            ComicCard(comic, onLongPress = { onLongPress(comic) }, longPressLabel = longPressLabel)
+            ComicCard(
+                comic = comic,
+                onClick = { onClick(comic) },
+                onLongPress = { onLongPress(comic) },
+                longPressLabel = longPressLabel
+            )
         }
     }
 }
 
 @Composable
-private fun ComicCard(comic: Comic, onLongPress: () -> Unit, longPressLabel: String) {
+private fun ComicCard(comic: Comic, onClick: () -> Unit, onLongPress: () -> Unit, longPressLabel: String) {
     Column(
         Modifier.combinedClickable(
-            // Opening the reader comes in M4.
-            onClick = {},
+            onClick = onClick,
             onLongClick = onLongPress,
             onLongClickLabel = longPressLabel
         )

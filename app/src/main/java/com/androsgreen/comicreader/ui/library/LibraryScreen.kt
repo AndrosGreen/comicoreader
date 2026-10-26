@@ -70,6 +70,7 @@ private val CBZ_MIME_TYPES = arrayOf(
 
 @Composable
 fun LibraryScreen(
+    onComicClick: (Comic) -> Unit,
     onOpenCollections: () -> Unit,
     viewModel: LibraryViewModel = koinViewModel()
 ) {
@@ -81,6 +82,7 @@ fun LibraryScreen(
         state = state,
         onImportClick = { picker.launch(CBZ_MIME_TYPES) },
         onFailuresShown = viewModel::onFailuresShown,
+        onComicClick = onComicClick,
         onComicLongPress = viewModel::onComicLongPress,
         onActionsDismiss = viewModel::onActionsDismiss,
         onAddToCollectionsClick = viewModel::onAddToCollectionsClick,
@@ -103,6 +105,7 @@ fun LibraryContent(
     state: LibraryUiState,
     onImportClick: () -> Unit,
     onFailuresShown: () -> Unit,
+    onComicClick: (Comic) -> Unit,
     onComicLongPress: (Comic) -> Unit,
     onActionsDismiss: () -> Unit,
     onAddToCollectionsClick: (Comic) -> Unit,
@@ -146,6 +149,7 @@ fun LibraryContent(
                 )
                 else -> ComicGrid(
                     comics = state.comics,
+                    onClick = onComicClick,
                     onLongPress = onComicLongPress,
                     longPressLabel = stringResource(R.string.action_more_actions)
                 )
@@ -330,6 +334,7 @@ private fun EmptyLibraryPreview() {
             LibraryUiState(isLoading = false),
             onImportClick = {},
             onFailuresShown = {},
+            onComicClick = {},
             onComicLongPress = {},
             onActionsDismiss = {},
             onAddToCollectionsClick = {},
@@ -355,6 +360,7 @@ private fun LibraryWithComicsPreview() {
             LibraryUiState(comics = comics, isLoading = false, importProgress = ImportProgress(2, 5)),
             onImportClick = {},
             onFailuresShown = {},
+            onComicClick = {},
             onComicLongPress = {},
             onActionsDismiss = {},
             onAddToCollectionsClick = {},
