@@ -26,7 +26,7 @@ A local, offline comic reader for Android, focused on reading comics and organiz
 | Zoom & pan in reader | Telephoto (`zoomable-image-coil3`) |
 | Async | Kotlin Coroutines + Flow |
 | Archive reading | `java.util.zip.ZipFile` (CBZ) |
-| Testing | JUnit 4, `kotlinx-coroutines-test`; JVM tests for pure logic, instrumented tests (in-memory Room) for DAOs and repositories |
+| Testing | JUnit 4, `kotlinx-coroutines-test`; JVM tests for pure logic and ViewModels (with fakes); instrumented tests for DAOs and repositories (in-memory Room) and for code that needs Android (`ContentResolver`, image decoding) |
 
 New dependencies must not be added without discussion. Prefer permissively licensed libraries (Apache 2.0, MIT, BSD).
 
@@ -36,10 +36,10 @@ Single `app` module for now, organized by layer:
 
 ```
 com.androsgreen.comicreader
-├── domain/        # Models (Comic, Collection), repository interfaces, result types, use cases. No Android imports.
+├── domain/        # Models (Comic, Collection), repository and importer interfaces, result types, use cases. No Android imports.
 ├── data/
 │   ├── db/        # Room entities, DAOs, database
-│   ├── files/     # Import, storage paths, thumbnail generation
+│   ├── files/     # Importer, app-private file storage, cover generation
 │   ├── archive/   # Comic archive readers (CbzReader behind a ComicArchiveReader interface)
 │   └── repository/ # Repository implementations
 ├── ui/
@@ -80,16 +80,17 @@ Deleting a comic removes it from all collections. Deleting a collection does **n
 ## File handling
 
 - Files are picked with the Storage Access Framework (`ACTION_OPEN_DOCUMENT`, multi-select allowed). No broad storage permissions (never `MANAGE_EXTERNAL_STORAGE`).
-- On import, the file is **copied** into app-private storage: `filesDir/comics/<uuid>.cbz`. Copying gives reliable random access via `ZipFile`.
-- Cover thumbnails are generated at import from the first page, downscaled, and stored in `filesDir/covers/<uuid>.webp`, sharing the uuid of the comic's file.
-- Deleting a comic deletes its stored file and cover.
-- Import of an invalid or unreadable file fails gracefully with a user-visible message; nothing is left half-imported.
+- On import, the file is **copied** into app-private storage: `filesDir/comics/<uuid>.cbz`. Copying gives reliable random access via `ZipFile`. The original is only read, never modified or deleted (the app only gets read access to it); an imported comic therefore takes space twice until the user deletes the original.
+- Cover thumbnails are generated at import from the first page in reading order, fitted inside 600×900 px (never upscaled), encoded as WebP quality 80, and stored in `filesDir/covers/<uuid>.webp`, sharing the uuid of the comic's file.
+- Deleting a comic deletes its library entry, its stored file and its cover — never the original.
+- Import of an invalid or unreadable file fails gracefully with a user-visible message (can't read the file / not a CBZ / no pages / first page unreadable / unexpected error); nothing is left half-imported.
 
 ## CBZ reading rules
 
 - Page images: entries ending in `.jpg`, `.jpeg`, `.png`, `.webp`, `.avif`, `.gif` (case-insensitive).
-- Ignore directories, hidden files, `__MACOSX/` entries, and non-image files (e.g. `ComicInfo.xml` is ignored for now).
-- Page order: **natural sort** of full entry paths (so `page2` comes before `page10`).
+- Ignore directories, hidden files and folders (any path segment starting with `.`), anything under a `__MACOSX` folder, and non-image files (e.g. `ComicInfo.xml` is ignored for now). Both `/` and `\` are accepted as path separators.
+- Page order: **natural sort** of full entry paths — digit runs compare by value (`page2` before `page10`), letters ignore case, and paths sort folder by folder (`ch2/` before `ch10/`).
+- A corrupt or unreadable file is an error; an archive with no images opens with zero pages and is rejected by the importer.
 - Pages are decoded on demand and downsampled to screen size. Never load all pages into memory.
 
 ## MVP milestones
@@ -110,13 +111,13 @@ Each milestone is done when its acceptance criteria are met, the app builds, and
 ### M2 — Import & library
 - `CbzReader` implementing `ComicArchiveReader` (list pages, open page stream), with unit tests including natural sort and ignored entries.
 - Import flow: pick one or more CBZ files → copy → read page count → generate cover → save to DB.
-- Library screen: grid of covers with titles, sorted by most recently added. Empty state with an import button.
-- Delete a comic (with confirmation).
+- Library screen: adaptive grid of covers with titles, sorted by most recently added. Empty state with an import button; import progress and failure messages.
+- Delete a comic: long-press a cover, then confirm.
 
 ### M3 — Collections
 - Collections screen: list, create, rename, delete (with confirmation).
 - Collection detail screen: grid of its comics.
-- Add a comic to one or more collections (from the library, via long-press or menu). Remove a comic from a collection.
+- Add a comic to one or more collections from the library. Since M2 uses long-press for delete, long-press becomes a small action menu (Add to collections, Delete). Remove a comic from a collection.
 
 ### M4 — Reader
 - Open a comic from library or collection.
@@ -143,6 +144,9 @@ Roughly in priority order, not committed:
 - CBR / CB7 support
 - Linking external folders instead of copying (SAF persistent URIs)
 - Backup / export of library data
+- Detect duplicate imports (importing the same file twice currently creates two entries)
+- Startup cleanup of unreferenced files (a process death mid-copy can leave one behind)
+- Compact delete-dialog title for very long comic titles
 - iOS / iPadOS via Kotlin Multiplatform
 
 ## Decision log
