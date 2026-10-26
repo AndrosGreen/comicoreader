@@ -27,7 +27,7 @@ val appModule = module {
     single { get<AppDatabase>().comicDao() }
     single { get<AppDatabase>().collectionDao() }
 
-    single<ComicRepository> { ComicRepositoryImpl(get()) }
+    single<ComicRepository> { ComicRepositoryImpl(get(), get()) }
     single<CollectionRepository> { CollectionRepositoryImpl(get()) }
 
     single { ComicFileStore(androidContext().contentResolver, androidContext().filesDir) }

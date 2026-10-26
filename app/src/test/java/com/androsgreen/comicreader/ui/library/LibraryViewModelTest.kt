@@ -116,6 +116,39 @@ class LibraryViewModelTest {
         assertEquals(emptyList<String>(), importer.sources)
     }
 
+    @Test
+    fun deleteRequest_opensConfirmation_andDismissClosesItWithoutDeleting() = runTest {
+        observeState()
+        val comic = comic(1)
+
+        viewModel.onDeleteRequest(comic)
+        assertEquals(comic, viewModel.uiState.value.pendingDelete)
+
+        viewModel.onDeleteDismiss()
+        assertNull(viewModel.uiState.value.pendingDelete)
+        assertEquals(emptyList<Long>(), repository.deletedIds)
+    }
+
+    @Test
+    fun deleteConfirm_deletesThePendingComic_andClosesConfirmation() = runTest {
+        observeState()
+
+        viewModel.onDeleteRequest(comic(7))
+        viewModel.onDeleteConfirm()
+
+        assertEquals(listOf(7L), repository.deletedIds)
+        assertNull(viewModel.uiState.value.pendingDelete)
+    }
+
+    @Test
+    fun deleteConfirm_withNothingPending_doesNothing() = runTest {
+        observeState()
+
+        viewModel.onDeleteConfirm()
+
+        assertEquals(emptyList<Long>(), repository.deletedIds)
+    }
+
     /** uiState only updates while collected (WhileSubscribed), like when the screen is visible. */
     private fun TestScope.observeState() {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
@@ -131,7 +164,11 @@ class LibraryViewModelTest {
         override suspend fun getComic(id: Long): Comic? = error("not used")
         override suspend fun addComic(comic: Comic): Long = error("not used")
         override suspend fun updateProgress(id: Long, lastReadPage: Int, lastOpenedAt: Long) = error("not used")
-        override suspend fun deleteComic(id: Long) = error("not used")
+        val deletedIds = mutableListOf<Long>()
+
+        override suspend fun deleteComic(id: Long) {
+            deletedIds += id
+        }
 
         private fun MutableStateFlow<List<Comic>?>.filterNotNullFlow(): Flow<List<Comic>> =
             kotlinx.coroutines.flow.flow { collect { list -> if (list != null) emit(list) } }

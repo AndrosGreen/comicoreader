@@ -6,6 +6,10 @@
     <string name="library_empty_hint">Import CBZ files to start reading.</string>
     <string name="action_import">Import</string>
     <string name="action_import_comics">Import comics</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="delete_comic_title">Delete “%1$s”?</string>
+    <string name="delete_comic_message">The comic and its reading progress will be removed from this device, including from any collections. The original file isn\'t affected.</string>
     <string name="import_progress">Importing %1$d of %2$d</string>
 
     <string name="import_failed_single">Couldn\'t import %1$s: %2$s</string>

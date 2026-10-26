@@ -46,7 +46,7 @@ class ComicImporterImplTest : DatabaseTest() {
         root = tempFolder.newFolder("root")
         sources = tempFolder.newFolder("sources")
         store = ComicFileStore(ApplicationProvider.getApplicationContext<Context>().contentResolver, root)
-        repository = ComicRepositoryImpl(db.comicDao())
+        repository = ComicRepositoryImpl(db.comicDao(), store)
         importer = ComicImporterImpl(store, CbzReader(), CoverGenerator(), repository, clock = { NOW })
     }
 

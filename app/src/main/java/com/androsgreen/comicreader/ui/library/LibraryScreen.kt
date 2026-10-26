@@ -3,6 +3,7 @@ package com.androsgreen.comicreader.ui.library
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -25,6 +27,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,7 +78,10 @@ fun LibraryScreen(viewModel: LibraryViewModel = koinViewModel()) {
     LibraryContent(
         state = state,
         onImportClick = { picker.launch(CBZ_MIME_TYPES) },
-        onFailuresShown = viewModel::onFailuresShown
+        onFailuresShown = viewModel::onFailuresShown,
+        onDeleteRequest = viewModel::onDeleteRequest,
+        onDeleteConfirm = viewModel::onDeleteConfirm,
+        onDeleteDismiss = viewModel::onDeleteDismiss
     )
 }
 
@@ -84,7 +90,10 @@ fun LibraryScreen(viewModel: LibraryViewModel = koinViewModel()) {
 fun LibraryContent(
     state: LibraryUiState,
     onImportClick: () -> Unit,
-    onFailuresShown: () -> Unit
+    onFailuresShown: () -> Unit,
+    onDeleteRequest: (Comic) -> Unit,
+    onDeleteConfirm: () -> Unit,
+    onDeleteDismiss: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val failureMessage = failureMessage(state.failedImports)
@@ -116,10 +125,29 @@ fun LibraryContent(
                     importEnabled = !state.isImporting,
                     onImportClick = onImportClick
                 )
-                else -> ComicGrid(state.comics)
+                else -> ComicGrid(state.comics, onLongPress = onDeleteRequest)
             }
         }
     }
+
+    state.pendingDelete?.let { comic ->
+        DeleteComicDialog(comic, onConfirm = onDeleteConfirm, onDismiss = onDeleteDismiss)
+    }
+}
+
+@Composable
+private fun DeleteComicDialog(comic: Comic, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.delete_comic_title, comic.title)) },
+        text = { Text(stringResource(R.string.delete_comic_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.action_delete)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
 }
 
 @Composable
@@ -159,7 +187,7 @@ private fun EmptyLibrary(importEnabled: Boolean, onImportClick: () -> Unit) {
 }
 
 @Composable
-private fun ComicGrid(comics: List<Comic>) {
+private fun ComicGrid(comics: List<Comic>, onLongPress: (Comic) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 100.dp),
         // Extra bottom padding keeps the last row clear of the floating button.
@@ -168,13 +196,20 @@ private fun ComicGrid(comics: List<Comic>) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        items(comics, key = { it.id }) { comic -> ComicCard(comic) }
+        items(comics, key = { it.id }) { comic -> ComicCard(comic, onLongPress = { onLongPress(comic) }) }
     }
 }
 
 @Composable
-private fun ComicCard(comic: Comic) {
-    Column {
+private fun ComicCard(comic: Comic, onLongPress: () -> Unit) {
+    Column(
+        Modifier.combinedClickable(
+            // Opening the reader comes in M4.
+            onClick = {},
+            onLongClick = onLongPress,
+            onLongClickLabel = stringResource(R.string.action_delete)
+        )
+    ) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -222,7 +257,14 @@ private val ImportFailure.message: Int
 @Composable
 private fun EmptyLibraryPreview() {
     ComicReaderTheme {
-        LibraryContent(LibraryUiState(isLoading = false), onImportClick = {}, onFailuresShown = {})
+        LibraryContent(
+            LibraryUiState(isLoading = false),
+            onImportClick = {},
+            onFailuresShown = {},
+            onDeleteRequest = {},
+            onDeleteConfirm = {},
+            onDeleteDismiss = {}
+        )
     }
 }
 
@@ -236,7 +278,10 @@ private fun LibraryWithComicsPreview() {
         LibraryContent(
             LibraryUiState(comics = comics, isLoading = false, importProgress = ImportProgress(2, 5)),
             onImportClick = {},
-            onFailuresShown = {}
+            onFailuresShown = {},
+            onDeleteRequest = {},
+            onDeleteConfirm = {},
+            onDeleteDismiss = {}
         )
     }
 }
