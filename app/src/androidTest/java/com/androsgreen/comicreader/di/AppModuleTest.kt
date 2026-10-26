@@ -1,9 +1,11 @@
 package com.androsgreen.comicreader.di
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.androsgreen.comicreader.data.files.ComicImporterImpl
 import com.androsgreen.comicreader.data.repository.CollectionRepositoryImpl
 import com.androsgreen.comicreader.data.repository.ComicRepositoryImpl
 import com.androsgreen.comicreader.domain.CollectionRepository
+import com.androsgreen.comicreader.domain.ComicImporter
 import com.androsgreen.comicreader.domain.ComicRepository
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,5 +30,10 @@ class AppModuleTest {
     @Test
     fun resolvesCollectionRepository() {
         assertTrue(koin.get<CollectionRepository>() is CollectionRepositoryImpl)
+    }
+
+    @Test
+    fun resolvesComicImporter() {
+        assertTrue(koin.get<ComicImporter>() is ComicImporterImpl)
     }
 }

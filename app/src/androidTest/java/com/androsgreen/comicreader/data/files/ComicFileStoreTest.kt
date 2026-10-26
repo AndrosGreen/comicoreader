@@ -107,16 +107,16 @@ class ComicFileStoreTest {
     }
 
     @Test
-    fun coverFile_isNamedByComicId() {
-        assertEquals(File(root, "covers/42.webp"), store.coverFile(42L))
+    fun coverFile_sharesTheComicFilesName() {
+        assertEquals(File(root, "covers/3f2a.webp"), store.coverFile("3f2a.cbz"))
     }
 
     @Test
     fun deleteComicFiles_removesComicAndCover() = runTest {
         val fileName = store.copyIn(downloadsUri("Saga $runId.cbz", byteArrayOf(1)))
-        val cover = store.coverFile(7L).apply { parentFile!!.mkdirs(); writeBytes(byteArrayOf(2)) }
+        val cover = store.coverFile(fileName).apply { parentFile!!.mkdirs(); writeBytes(byteArrayOf(2)) }
 
-        store.deleteComicFiles(fileName, comicId = 7L)
+        store.deleteComicFiles(fileName)
 
         assertFalse(store.comicFile(fileName).exists())
         assertFalse(cover.exists())
@@ -124,7 +124,7 @@ class ComicFileStoreTest {
 
     @Test
     fun deleteComicFiles_missingFiles_doesNotThrow() = runTest {
-        store.deleteComicFiles("never-stored.cbz", comicId = 99L)
+        store.deleteComicFiles("never-stored.cbz")
     }
 
     /** Adds a file to the shared Downloads collection, like a comic the user downloaded. */
