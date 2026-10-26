@@ -43,6 +43,9 @@
     <string name="delete_comic_message">The comic and its reading progress will be removed from this device, including from any collections. The original file isn\'t affected.</string>
     <string name="reader_page_description">Page %1$d of %2$d</string>
     <string name="reader_page_indicator">Page %1$d of %2$d</string>
+    <string name="progress_unread">Unread</string>
+    <string name="progress_in_progress">Page %1$d of %2$d</string>
+    <string name="progress_finished">Finished</string>
     <string name="reader_error_not_found">This comic is no longer in your library.</string>
     <string name="reader_error_unreadable">This comic\'s file couldn\'t be opened.</string>
     <string name="import_progress">Importing %1$d of %2$d</string>
