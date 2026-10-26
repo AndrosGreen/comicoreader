@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.androsgreen.comicreader.ui.library.LibraryScreen
+import com.androsgreen.comicreader.ui.ComicReaderApp
 import com.androsgreen.comicreader.ui.theme.ComicReaderTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComicReaderTheme {
-                LibraryScreen()
+                ComicReaderApp()
             }
         }
     }

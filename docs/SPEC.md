@@ -21,7 +21,7 @@ A local, offline comic reader for Android, focused on reading comics and organiz
 | Database | Room (with KSP) |
 | Settings | DataStore (Preferences) |
 | Dependency injection | Koin |
-| Navigation | Navigation Compose |
+| Navigation | Navigation Compose, type-safe routes (`kotlinx-serialization-core` + Kotlin serialization plugin) |
 | Image loading / thumbnails | Coil 3 |
 | Zoom & pan in reader | Telephoto (`zoomable-image-coil3`) |
 | Async | Kotlin Coroutines + Flow |
@@ -42,7 +42,7 @@ com.androsgreen.comicreader
 │   ├── files/     # Importer, app-private file storage, cover generation
 │   ├── archive/   # Comic archive readers (CbzReader behind a ComicArchiveReader interface)
 │   └── repository/ # Repository implementations
-├── ui/
+├── ui/            # ComicReaderApp (nav host + bottom bar), Routes
 │   ├── library/   # Library grid screen
 │   ├── collections/ # Collection list & detail screens
 │   ├── reader/    # Reader screen
@@ -179,3 +179,5 @@ Record significant decisions here (date — decision — reason).
 - 2026-10-26 — Import picker (`OpenMultipleDocuments`) offers `application/x-cbz` (what Android's media store reports), `application/vnd.comicbook+zip`, `application/zip`, `application/x-zip-compressed` and `application/octet-stream` — providers label CBZ inconsistently, and the importer rejects non-CBZ content anyway. `ComicImporter` never throws except for cancellation; unexpected errors become `ImportFailure.UNEXPECTED`. The library reports failures once per batch in a snackbar (the reason for one file, a count for several), delivered through UI state and acknowledged by the screen so rotation can't drop them.
 - 2026-10-26 — Library grid uses `GridCells.Adaptive(100.dp)`: 3 columns on a typical phone, more on tablets and foldables. Icons are local vector drawables (Material Symbols, Apache 2.0) instead of the `material-icons` dependency. `lifecycle-runtime-compose` is declared explicitly for `collectAsStateWithLifecycle`; `kotlinx-coroutines-test` is also a `testImplementation` for JVM ViewModel tests.
 - 2026-10-26 — `ComicRepository.deleteComic` owns the whole deletion: row first (memberships cascade), then the stored file and cover via `ComicFileStore`, so no caller can forget the files and a file-deletion failure only leaves unreferenced files rather than an entry without a file. The user's original document is never touched (the app only holds read access to it). Library delete is a long-press (with an accessibility label) → confirmation dialog whose state lives in the ViewModel, so it survives rotation; no undo, since files are really deleted.
+- 2026-10-26 — Navigation uses **type-safe routes** (`@Serializable` objects/classes) — arguments such as `collectionId` are checked at compile time, and it is the approach Navigation now recommends. Adds the Kotlin serialization plugin (same version as Kotlin) and `kotlinx-serialization-core` 1.12.0 (declared explicitly; Navigation already pulled in 1.7.3 transitively).
+- 2026-10-26 — App structure: a Material 3 bottom `NavigationBar` with two top-level tabs, Library and Collections. Each tab is a nested graph and switching tabs saves/restores its back stack, so Collection detail stays open inside the Collections tab. The bottom bar shows only for destinations inside a tab graph, leaving room for a full-screen reader (M4). Screens keep their own `Scaffold`/top bar; the outer `Scaffold`'s insets are consumed so they aren't applied twice.
